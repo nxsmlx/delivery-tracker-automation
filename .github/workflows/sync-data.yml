@@ -16,13 +16,22 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20'  # Changed to Node 20
+        node-version: '20'
+        
+    - name: Download Excel file
+      env:
+        EXCEL_FILE_URL: ${{ secrets.EXCEL_FILE_URL }}
+      run: |
+        echo "📥 Downloading Excel file from URL..."
+        curl -L -o "delivery-data.xlsx" "$EXCEL_FILE_URL"
+        echo "✅ Downloaded file as delivery-data.xlsx"
+        ls -la *.xlsx
         
     - name: Download and process Excel file
       env:
         SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
         SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-        EXCEL_FILE_URL: ${{ secrets.EXCEL_FILE_URL }}
+        EXCEL_FILE_NAME: "delivery-data.xlsx"
       run: |
-        npm install xlsx  # Removed node-fetch, use built-in fetch
+        npm install xlsx
         node process-excel.js
