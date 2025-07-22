@@ -29,7 +29,7 @@ async function saveToSupabase(data) {
         return;
     }
     
-    // Prepare complete analytics data
+    // Prepare complete analytics data (ALL records)
     const analyticsRecords = data.map((item) => ({
         ticket_id: item.ticket_id,
         order_received: item.order_received,
@@ -37,17 +37,17 @@ async function saveToSupabase(data) {
         urgent: item.urgent || 'No',
         customer: item.customer || '',
         aging: parseInt(item.aging) || 0,
-        status: item.aging >= 1 ? 'Pending' : 'Completed',
+        status: parseInt(item.aging) >= 1 ? 'Pending' : 'Completed',
         updated_by: 'GitHub_Automation'
     }));
     
-    // Prepare filtered aging data
-    const agingRecords = data.filter(item => item.aging >= 1);
+    // Prepare filtered aging data (pending only)
+    const agingRecords = data.filter(item => parseInt(item.aging) >= 1);
     
     console.log(`💾 Saving ${analyticsRecords.length} total records and ${agingRecords.length} pending records...`);
     
     // Save to both tables
-    await Promise.all([
+    const savePromises = [
         // Save complete data to analytics
         fetch(`${supabaseUrl}/rest/v1/delivery_analytics`, {
             method: 'POST',
@@ -58,20 +58,26 @@ async function saveToSupabase(data) {
                 'Prefer': 'return=representation'
             },
             body: JSON.stringify(analyticsRecords)
-        }),
-        
-        // Save filtered data to aging tracker
-        agingRecords.length > 0 ? fetch(`${supabaseUrl}/rest/v1/delivery_data`, {
-            method: 'POST',
-            headers: {
-                'apikey': supabaseKey,
-                'Authorization': `Bearer ${supabaseKey}`,
-                'Content-Type': 'application/json',
-                'Prefer': 'return=representation'
-            },
-            body: JSON.stringify(agingRecords)
-        }) : Promise.resolve()
-    ]);
+        })
+    ];
+    
+    // Save filtered data to aging tracker (only if there are pending records)
+    if (agingRecords.length > 0) {
+        savePromises.push(
+            fetch(`${supabaseUrl}/rest/v1/delivery_data`, {
+                method: 'POST',
+                headers: {
+                    'apikey': supabaseKey,
+                    'Authorization': `Bearer ${supabaseKey}`,
+                    'Content-Type': 'application/json',
+                    'Prefer': 'return=representation'
+                },
+                body: JSON.stringify(agingRecords)
+            })
+        );
+    }
+    
+    await Promise.all(savePromises);
     
     // Update metadata
     const metadata = {
@@ -93,4 +99,5 @@ async function saveToSupabase(data) {
     });
     
     console.log('✅ Data saved to both databases successfully');
+    console.log(`📊 Analytics: ${analyticsRecords.length} records, Aging: ${agingRecords.length} records`);
 }
