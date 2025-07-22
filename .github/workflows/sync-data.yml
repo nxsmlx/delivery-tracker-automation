@@ -1,0 +1,28 @@
+name: Sync Excel Data to Supabase
+
+on:
+  schedule:
+    - cron: '0 */2 * * *'  # Every 2 hours
+  workflow_dispatch:  # Manual trigger
+
+jobs:
+  sync-data:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Download and process Excel file
+      env:
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        EXCEL_FILE_URL: ${{ secrets.EXCEL_FILE_URL }}
+      run: |
+        npm install xlsx node-fetch
+        node process-excel.js
