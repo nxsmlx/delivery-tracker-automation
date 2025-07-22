@@ -125,7 +125,7 @@ async function saveToSupabase(data) {
     
     // Update metadata
     const metadata = {
-        last_update: new Date().toLocaleString(),
+        last_update: new Date().toLocaleString('en-MY', { timeZone: 'Asia/Kuala_Lumpur' }),
         updated_by: 'GitHub_Automation',
         total_records: data.length,
         updated_at: new Date().toISOString()
