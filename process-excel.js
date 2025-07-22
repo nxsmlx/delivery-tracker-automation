@@ -34,22 +34,23 @@ async function saveToSupabase(data) {
             return;
         }
         
-        // Prepare complete analytics data (ALL records)
+        // ✅ FIXED: Use actual Excel column names
         const analyticsRecords = data.map((item) => ({
-            ticket_id: item.ticket_id,
-            order_received: item.order_received,
-            type: item.type || '',
-            urgent: item.urgent || 'No',
-            customer: item.customer || '',
-            aging: parseInt(item.aging) || 0,
-            status: parseInt(item.aging) >= 1 ? 'Pending' : 'Completed',
+            ticket_id: item['Ticket ID'] || item['ticket_id'] || item.ticketId || '',
+            order_received: item['Order Received'] || item['order_received'] || item.orderReceived || '',
+            type: item['Type'] || item['Service Type'] || item.type || '',
+            urgent: item['Urgent'] || item['Urgent?'] || item.urgent || 'No',
+            customer: item['Customer'] || item['Client'] || item.customer || '',
+            aging: parseInt(item['Aging'] || item.aging || 0),
+            status: parseInt(item['Aging'] || item.aging || 0) >= 1 ? 'Pending' : 'Completed',
             updated_by: 'GitHub_Automation'
         }));
         
-        // Prepare filtered aging data (pending only)
-        const agingRecords = data.filter(item => parseInt(item.aging) >= 1);
+        // ✅ FIXED: Filter using correct field mapping
+        const agingRecords = analyticsRecords.filter(item => item.aging >= 1);
         
         console.log(`💾 Saving ${analyticsRecords.length} total records and ${agingRecords.length} pending records...`);
+        console.log('📋 Sample record:', analyticsRecords[0]); // Debug log
         
         // Save to both tables
         const savePromises = [
@@ -87,6 +88,8 @@ async function saveToSupabase(data) {
         // Check if saves were successful
         for (let i = 0; i < saveResults.length; i++) {
             if (!saveResults[i].ok) {
+                const errorText = await saveResults[i].text();
+                console.error(`❌ Save operation ${i + 1} failed:`, errorText);
                 throw new Error(`Save operation ${i + 1} failed: ${saveResults[i].status}`);
             }
         }
@@ -101,78 +104,5 @@ async function saveToSupabase(data) {
     } catch (error) {
         console.error('❌ Error in saveToSupabase:', error);
         throw error;
-    }
-}
-
-// Separate metadata update function with better error handling
-async function updateMetadata(supabaseUrl, supabaseKey, agingCount, analyticsCount) {
-    try {
-        console.log('📝 Updating metadata...');
-        
-        // Use Malaysia timezone
-        const now = new Date();
-        const malaysiaTime = new Intl.DateTimeFormat('en-MY', {
-            timeZone: 'Asia/Kuala_Lumpur',
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: true
-        }).format(now);
-        
-        const metadata = {
-            last_update: malaysiaTime,
-            updated_by: 'GitHub_Automation',
-            total_records: agingCount,
-            analytics_records: analyticsCount,
-            updated_at: now.toISOString()
-        };
-        
-        console.log('Metadata to save:', metadata);
-        
-        // Try to update existing record first
-        const updateResponse = await fetch(`${supabaseUrl}/rest/v1/delivery_metadata?id=eq.1`, {
-            method: 'PATCH',
-            headers: {
-                'apikey': supabaseKey,
-                'Authorization': `Bearer ${supabaseKey}`,
-                'Content-Type': 'application/json',
-                'Prefer': 'return=representation'
-            },
-            body: JSON.stringify(metadata)
-        });
-        
-        if (updateResponse.ok) {
-            const result = await updateResponse.json();
-            if (result.length > 0) {
-                console.log('✅ Metadata updated successfully');
-                return;
-            }
-        }
-        
-        // If update failed, try to insert new record
-        console.log('🔄 Update failed, inserting new metadata record...');
-        const insertResponse = await fetch(`${supabaseUrl}/rest/v1/delivery_metadata`, {
-            method: 'POST',
-            headers: {
-                'apikey': supabaseKey,
-                'Authorization': `Bearer ${supabaseKey}`,
-                'Content-Type': 'application/json',
-                'Prefer': 'return=representation'
-            },
-            body: JSON.stringify([{ id: 1, ...metadata }])
-        });
-        
-        if (insertResponse.ok) {
-            console.log('✅ Metadata inserted successfully');
-        } else {
-            throw new Error(`Metadata insert failed: ${insertResponse.status}`);
-        }
-        
-    } catch (error) {
-        console.error('❌ Error updating metadata:', error);
-        // Don't throw here - we don't want metadata errors to fail the entire operation
     }
 }
