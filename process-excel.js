@@ -13,7 +13,8 @@ async function downloadAndProcessExcel() {
             throw new Error(`Failed to download file: ${response.status} ${response.statusText}`);
         }
         
-        const buffer = await response.buffer();
+        const arrayBuffer = await response.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
         console.log(`✅ Downloaded ${buffer.length} bytes`);
         
         // Parse Excel file
