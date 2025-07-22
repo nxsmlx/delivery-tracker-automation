@@ -1,5 +1,5 @@
 const XLSX = require('xlsx');
-const fetch = require('node-fetch');
+// Using built-in fetch (Node 18+ has built-in fetch)
 
 async function downloadAndProcessExcel() {
     try {
