@@ -153,19 +153,30 @@ function prepareData(rawData) {
      */
     const cleanDeptName = (dept) => {
         if (!dept) return 'N/A';
-        const deptString = String(dept).trim();
+        // Trim and convert to uppercase at the beginning
+        const upperDeptString = String(dept).trim().toUpperCase();
+
+        // Rule 1: Check for prefix
+        if (upperDeptString.startsWith('PROC.')) {
+            return 'PROCUREMENT';
+        }
+
+        // Rule 2: Check for specific exact matches
         const deptMap = {
-            'Proc. Collection': 'PROCUREMENT',
             'QAS SALES': 'SALES',
             'QAS BD': 'BD',
             'RPN': 'RPN',
             'OFFICE ITEM': 'OFFICE',
-            'Proc. Document': 'PROCUREMENT',
             'MR DIY': 'MR DIY',
             'PMO': 'PROJECT'
         };
-        // Return the mapped value, or the original value (uppercased) if not in the map
-        return deptMap[deptString] || deptString.toUpperCase();
+        
+        if (deptMap[upperDeptString]) {
+            return deptMap[upperDeptString];
+        }
+        
+        // Fallback: if no rule matches, the string is already uppercased
+        return upperDeptString;
     };
     
     // Prepare complete analytics data (ALL records)
