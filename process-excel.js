@@ -145,6 +145,28 @@ function prepareData(rawData) {
         }
         return '';
     };
+
+    /**
+     * Cleans the department name based on predefined rules.
+     * @param {string} dept The raw department name from the Excel file.
+     * @returns {string} The cleaned department name.
+     */
+    const cleanDeptName = (dept) => {
+        if (!dept) return 'N/A';
+        const deptString = String(dept).trim();
+        const deptMap = {
+            'Proc. Collection': 'PROCUREMENT',
+            'QAS SALES': 'SALES',
+            'QAS BD': 'BD',
+            'RPN': 'RPN',
+            'OFFICE ITEM': 'OFFICE',
+            'Proc. Document': 'PROCUREMENT',
+            'MR DIY': 'MR DIY',
+            'PMO': 'PROJECT'
+        };
+        // Return the mapped value, or the original value (uppercased) if not in the map
+        return deptMap[deptString] || deptString.toUpperCase();
+    };
     
     // Prepare complete analytics data (ALL records)
     const analyticsRecords = rawData.map((row, index) => {
@@ -154,6 +176,7 @@ function prepareData(rawData) {
             type: getColumnValue(row, ['Type', 'Service Type', 'type', 'ServiceType']),
             urgent: getColumnValue(row, ['Urgent', 'Urgent?', 'urgent', 'URGENT']) || 'No',
             customer: getColumnValue(row, ['Customer', 'Client', 'customer', 'CLIENT']),
+            dept: cleanDeptName(getColumnValue(row, ['Dept', 'Department', 'dept'])), // Clean and add department
             aging: parseInt(getColumnValue(row, ['Aging', 'aging', 'AGING', 'Days']) || '0'),
             status: parseInt(getColumnValue(row, ['Aging', 'aging', 'AGING', 'Days']) || '0') >= 1 ? 'Pending' : 'Completed',
             updated_by: 'GitHub_Automation'
@@ -188,6 +211,7 @@ function prepareData(rawData) {
                 type: getColumnValue(row, ['Type', 'Service Type', 'type', 'ServiceType']),
                 urgent: getColumnValue(row, ['Urgent', 'Urgent?', 'urgent', 'URGENT']) || 'No',
                 customer: getColumnValue(row, ['Customer', 'Client', 'customer', 'CLIENT']),
+                dept: cleanDeptName(getColumnValue(row, ['Dept', 'Department', 'dept'])), // Clean and add department
                 aging: parseInt(getColumnValue(row, ['Aging', 'aging', 'AGING', 'Days']) || '0'),
                 updated_by: 'GitHub_Automation'
             };
