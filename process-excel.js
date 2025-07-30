@@ -179,7 +179,6 @@ function prepareData(rawData) {
         return upperDeptString;
     };
     
-    // Added: Function to clean location name
     /**
      * Cleans the location name based on predefined rules.
      * @param {string} loc The raw location name from the Excel file.
@@ -204,7 +203,6 @@ function prepareData(rawData) {
 
     // Prepare complete analytics data (ALL records)
     const analyticsRecords = rawData.map((row, index) => {
-        // Modified: Added 'loc' field
         const record = {
             ticket_id: getColumnValue(row, ['Ticket ID', 'ticket_id', 'TicketID', 'ID']),
             order_received: getColumnValue(row, ['Order Received', 'order_received', 'Date', 'OrderReceived']),
@@ -212,7 +210,8 @@ function prepareData(rawData) {
             urgent: getColumnValue(row, ['Urgent', 'Urgent?', 'urgent', 'URGENT']) || 'No',
             customer: getColumnValue(row, ['Customer', 'Client', 'customer', 'CLIENT']),
             dept: cleanDeptName(getColumnValue(row, ['Dept', 'Department', 'dept'])),
-            loc: cleanLocName(getColumnValue(row, ['Loc', 'Location', 'loc'])), // Added
+            // Modified: Set "Loc" as the primary name for the location column
+            loc: cleanLocName(getColumnValue(row, ['Loc', 'Location', 'For', 'loc'])),
             aging: parseInt(getColumnValue(row, ['Aging', 'aging', 'AGING', 'Days']) || '0'),
             status: parseInt(getColumnValue(row, ['Aging', 'aging', 'AGING', 'Days']) || '0') >= 1 ? 'Pending' : 'Completed',
             updated_by: 'GitHub_Automation'
@@ -241,7 +240,6 @@ function prepareData(rawData) {
             return aging >= 1;
         })
         .map((row) => {
-            // Modified: Added 'loc' field
             const record = {
                 ticket_id: getColumnValue(row, ['Ticket ID', 'ticket_id', 'TicketID', 'ID']),
                 order_received: getColumnValue(row, ['Order Received', 'order_received', 'Date', 'OrderReceived']),
@@ -249,7 +247,8 @@ function prepareData(rawData) {
                 urgent: getColumnValue(row, ['Urgent', 'Urgent?', 'urgent', 'URGENT']) || 'No',
                 customer: getColumnValue(row, ['Customer', 'Client', 'customer', 'CLIENT']),
                 dept: cleanDeptName(getColumnValue(row, ['Dept', 'Department', 'dept'])),
-                loc: cleanLocName(getColumnValue(row, ['Loc', 'Location', 'loc'])), // Added
+                 // Modified: Set "Loc" as the primary name for the location column
+                loc: cleanLocName(getColumnValue(row, ['Loc', 'Location', 'For', 'loc'])),
                 aging: parseInt(getColumnValue(row, ['Aging', 'aging', 'AGING', 'Days']) || '0'),
                 updated_by: 'GitHub_Automation'
             };
