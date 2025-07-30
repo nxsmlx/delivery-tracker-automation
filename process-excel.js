@@ -179,15 +179,40 @@ function prepareData(rawData) {
         return upperDeptString;
     };
     
+    // Added: Function to clean location name
+    /**
+     * Cleans the location name based on predefined rules.
+     * @param {string} loc The raw location name from the Excel file.
+     * @returns {string} The cleaned location name.
+     */
+    const cleanLocName = (loc) => {
+        if (!loc) return 'N/A';
+        const upperLocString = String(loc).trim().toUpperCase();
+
+        // Add any specific mapping rules here if needed
+        const locMap = {
+            'WAREHOUSE': 'WH',
+            'FIELD': 'SITE'
+        };
+
+        if (locMap[upperLocString]) {
+            return locMap[upperLocString];
+        }
+
+        return upperLocString; // Return the uppercased string if no rule matches
+    };
+
     // Prepare complete analytics data (ALL records)
     const analyticsRecords = rawData.map((row, index) => {
+        // Modified: Added 'loc' field
         const record = {
             ticket_id: getColumnValue(row, ['Ticket ID', 'ticket_id', 'TicketID', 'ID']),
             order_received: getColumnValue(row, ['Order Received', 'order_received', 'Date', 'OrderReceived']),
             type: getColumnValue(row, ['Type', 'Service Type', 'type', 'ServiceType']),
             urgent: getColumnValue(row, ['Urgent', 'Urgent?', 'urgent', 'URGENT']) || 'No',
             customer: getColumnValue(row, ['Customer', 'Client', 'customer', 'CLIENT']),
-            dept: cleanDeptName(getColumnValue(row, ['Dept', 'Department', 'dept'])), // Clean and add department
+            dept: cleanDeptName(getColumnValue(row, ['Dept', 'Department', 'dept'])),
+            loc: cleanLocName(getColumnValue(row, ['Loc', 'Location', 'loc'])), // Added
             aging: parseInt(getColumnValue(row, ['Aging', 'aging', 'AGING', 'Days']) || '0'),
             status: parseInt(getColumnValue(row, ['Aging', 'aging', 'AGING', 'Days']) || '0') >= 1 ? 'Pending' : 'Completed',
             updated_by: 'GitHub_Automation'
@@ -216,13 +241,15 @@ function prepareData(rawData) {
             return aging >= 1;
         })
         .map((row) => {
+            // Modified: Added 'loc' field
             const record = {
                 ticket_id: getColumnValue(row, ['Ticket ID', 'ticket_id', 'TicketID', 'ID']),
                 order_received: getColumnValue(row, ['Order Received', 'order_received', 'Date', 'OrderReceived']),
                 type: getColumnValue(row, ['Type', 'Service Type', 'type', 'ServiceType']),
                 urgent: getColumnValue(row, ['Urgent', 'Urgent?', 'urgent', 'URGENT']) || 'No',
                 customer: getColumnValue(row, ['Customer', 'Client', 'customer', 'CLIENT']),
-                dept: cleanDeptName(getColumnValue(row, ['Dept', 'Department', 'dept'])), // Clean and add department
+                dept: cleanDeptName(getColumnValue(row, ['Dept', 'Department', 'dept'])),
+                loc: cleanLocName(getColumnValue(row, ['Loc', 'Location', 'loc'])), // Added
                 aging: parseInt(getColumnValue(row, ['Aging', 'aging', 'AGING', 'Days']) || '0'),
                 updated_by: 'GitHub_Automation'
             };
